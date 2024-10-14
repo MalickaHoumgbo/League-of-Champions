@@ -60,21 +60,32 @@ export class AppComponent implements OnInit {
 
   addChampion(): void {
     if (this.championForm.valid) {
+      // Générer un ID unique pour le nouveau champion
+      const newId = this.champions.length > 0 ? Math.max(...this.champions.map(c => c.id)) + 1 : 1;
+  
       const championToAdd = {
         ...this.championForm.value,
+        id: newId, // Assigner un ID unique ici
         tags: this.championForm.value.tags.split(',').map((tag: string) => tag.trim()), // Convertir les tags en tableau
       };
-      
+  
       console.log('Adding champion:', championToAdd);
+  
+      // Appel du service pour ajouter le champion
       this.championService.addChampion(championToAdd).subscribe((champion) => {
-        this.champions.push(champion); // Ajouter un champion à la liste
-        this.championForm.reset(); // Réinitialise le formulaire
-        
+        this.champions.push(champion); // Ajouter le champion à la liste locale
+  
+        // Mise à jour de la grille AG Grid avec applyTransaction
+        this.gridApi.applyTransaction({ add: [champion] });
+  
+        // Réinitialiser le formulaire après l'ajout
+        this.championForm.reset();
       });
     } else {
       console.error('Form is invalid');
     }
   }
+  
 
   deleteChampion(champion: Champion): void {
     this.championService.deleteChampion(champion.id).subscribe(() => {
